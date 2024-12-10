@@ -8,6 +8,7 @@ import Home from './components/Home';
 const auth = getAuth(appFirebase);
 
 function App() {
+
   const [usuario, setUsuario] = useState(null);
 
   useEffect(() => {
@@ -24,7 +25,9 @@ function App() {
   }, []);
 
   return (
+   
     <div>
+      
       {usuario ? <Home correoUsuario={usuario.email} /> : <Login />}
     </div>
   );

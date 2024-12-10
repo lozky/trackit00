@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import appFirebase from "../credenciales";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 
-
 const auth = getAuth(appFirebase);
 
 const Login = () => {
@@ -27,7 +26,11 @@ const Login = () => {
       const userCredential = await signInWithEmailAndPassword(auth, correo, contraseña);
       console.log("Usuario logueado:", userCredential.user);
     } catch (error) {
-      setError(error.message);
+      if (error.code === "auth/user-not-found") {
+        window.alert("El usuario no existe. Por favor, regístrate.");
+      } else {
+        setError(error.message);
+      }
     } finally {
       setRegistrando(false);
     }
@@ -49,16 +52,40 @@ const Login = () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, correo, contraseña);
       console.log("Usuario registrado:", userCredential.user);
+      window.alert("Registro exitoso");
       setShowModal(false); // Cierra el modal tras el registro exitoso
     } catch (error) {
-      setError(error.message);
+      if (error.code === "auth/email-already-in-use") {
+        window.alert("El usuario ya existe. Por favor, inicia sesión.");
+      } else {
+        setError(error.message);
+      }
     } finally {
       setRegistrando(false);
     }
   };
 
   return (
-    <div className="container col-4 d-flex flex-column align-items-center">
+    <div>
+     <header className="p-3 pb-4 text-bg-dark">
+     <nav className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top shadow ">
+        <div className="container-fluid">
+          {/* Logo o nombre de la aplicación */}
+          <span className="navbar-brand mb-0 h1">Trackit</span>
+          
+          {/* Botón alineado a la derecha */}
+          <button
+        className="btn btn-warning mt-3"
+        onClick={() => setShowModal(true)}
+      >
+        Regístrate
+      </button>
+        </div>
+      </nav>
+  </header >
+
+
+    <div className="container col-12 d-flex flex-column align-items-center">
       <form onSubmit={loginUser}>
         <h4 className="text-center mb-4">Inicia Sesión</h4>
         {error && <p className="text-danger">{error}</p>}
@@ -75,18 +102,20 @@ const Login = () => {
 
         <button
           type="submit"
-          className="btn btn-primary btn-block mb-4"
+          className="btn btn-warning btn-block mb-4"
           disabled={registrando}
         >
           {registrando ? "Procesando..." : "Inicia Sesión"}
         </button>
       </form>
 
+      <h5>or</h5>
+
       <button
         className="btn btn-secondary mt-3"
         onClick={() => setShowModal(true)}
       >
-        Registrarse
+        Regístrate
       </button>
 
       {/* Modal para registro */}
@@ -96,13 +125,6 @@ const Login = () => {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Regístrate</h5>
-                <button
-                  type="button"
-                  className="close"
-                  onClick={() => setShowModal(false)}
-                >
-                  <span>&times;</span>
-                </button>
               </div>
               <div className="modal-body">
                 <form onSubmit={registerUser}>
@@ -120,7 +142,7 @@ const Login = () => {
 
                   <button
                     type="submit"
-                    className="btn btn-primary btn-block"
+                    className="btn btn-warning btn-block"
                     disabled={registrando}
                   >
                     {registrando ? "Procesando..." : "Regístrate"}
@@ -140,6 +162,7 @@ const Login = () => {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 };

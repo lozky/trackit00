@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import credentials from "../credenciales";
-
 import {
   getFirestore,
   collection,
@@ -8,30 +7,62 @@ import {
   deleteDoc,
   doc,
   updateDoc,
-  addDoc,
 } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+import { onSnapshot, query, where } from "firebase/firestore";
 
 const db = getFirestore(credentials);
+const auth = getAuth(credentials);
 
 const List = () => {
   const [list, setList] = useState([]);
   const [tarea, setTarea] = useState(null);
   const [habilitar, setHabilitar] = useState(false);
 
-  // Obtener y renderizar la lista de tareas
+  // Obtener y renderizar la lista de tareas solo del usuario logueado
   const getList = async () => {
-    const data = await getDocs(collection(db, "tareas"));
-    setList(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        const data = await getDocs(collection(db, "tareas"));
+        const userTasks = data.docs
+          .filter((doc) => doc.data().userId === user.uid) // Filtrar por userId
+          .map((doc) => ({ ...doc.data(), id: doc.id }));
+        setList(userTasks);
+      } else {
+        alert("Usuario no autenticado.");
+      }
+    } catch (error) {
+      console.error("Error al obtener las tareas:", error);
+      alert("No se pudieron cargar las tareas.");
+    }
   };
 
   useEffect(() => {
-    getList();
+    const user = auth.currentUser;
+    if (user) {
+      const q = query(collection(db, "tareas"), where("userId", "==", user.uid)); // Consulta para el usuario actual
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const userTasks = snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+        setList(userTasks);
+      });
+  
+      // Limpiar el listener al desmontar el componente
+      return () => unsubscribe();
+    } else {
+      alert("Usuario no autenticado.");
+    }
   }, []);
 
   const deleteTarea = async (id) => {
-    await deleteDoc(doc(db, "tareas", id));
-    alert("Tarea eliminada con éxito");
-    getList(); // Actualizar la lista tras eliminar una tarea
+    try {
+      await deleteDoc(doc(db, "tareas", id));
+      alert("Tarea eliminada con éxito");
+      getList(); // Actualizar la lista tras eliminar una tarea
+    } catch (error) {
+      console.error("Error al eliminar la tarea:", error);
+      alert("No se pudo eliminar la tarea.");
+    }
   };
 
   const updateTarea = async (e) => {
@@ -43,7 +74,8 @@ const List = () => {
       setHabilitar(false);
       getList(); // Actualizar la lista tras actualizar una tarea
     } catch (error) {
-      alert(error);
+      console.error("Error al actualizar la tarea:", error);
+      alert("No se pudo actualizar la tarea.");
     }
   };
 
@@ -53,34 +85,39 @@ const List = () => {
     setTarea(updatedTarea);
 
     // Verificar si todos los campos están llenos
-    const allFieldsFilled = Object.values(updatedTarea).every((field) => field !== "");
+    const allFieldsFilled = Object.values(updatedTarea).every(
+      (field) => field !== ""
+    );
     setHabilitar(allFieldsFilled);
   };
 
   return (
     <div>
-      <div className="row row-cols-1 row-cols-md-2 g-4">
+      <header className='text-bg-dark'>
+
+      </header>
+      <div className="row row-cols-1 row-cols-md-1 g-4">
         {list.map((tarea) => (
           <div className="col" key={tarea.id}>
             <div className="card shadow-sm rounded m-1 h-100">
               <div className="card-body d-flex flex-column">
                 <h5 className="card-title mt-3">
                   {tarea.nombre}{" "}
-                  <button
+                  
+                </h5>
+                <p className="card-text">Descripción: {tarea.descripcion}</p>
+                <p className="card-text">Materia: {tarea.materia}</p>
+                <p className="card-text">Fecha: {tarea.fecha}</p>
+                <p className="card-text">Dificultad: {tarea.dificultad}</p>
+<button
                     type="button"
-                    className="btn btn-primary btn-sm"
+                    className="btn btn-info btn-sm"
                     data-bs-toggle="modal"
                     data-bs-target="#staticBackdrop"
                     onClick={() => setTarea(tarea)} // Establece toda la tarea
                   >
                     Editar
                   </button>
-                </h5>
-                <p className="card-text">Descripción: {tarea.descripcion}</p>
-                <p className="card-text">Materia: {tarea.materia}</p>
-                <p className="card-text">Fecha: {tarea.fecha}</p>
-                <p className="card-text">Dificultad: {tarea.dificultad}</p>
-
                 <button
                   className="btn btn-danger mt-auto"
                   onClick={() => deleteTarea(tarea.id)}
@@ -95,7 +132,7 @@ const List = () => {
 
       {/* Modal */}
       <div
-        className="modal fade"
+        className="modal fade text-bg-dark"
         id="staticBackdrop"
         data-bs-backdrop="static"
         data-bs-keyboard="false"
@@ -103,9 +140,9 @@ const List = () => {
         aria-labelledby="staticBackdropLabel"
         aria-hidden="true"
       >
-        <div className="modal-dialog">
-          <div className="modal-content">
-            <div className="modal-header">
+        <div className="modal-dialog text-bg-dark">
+          <div className="modal-content text-bg-dark">
+            <div className="modal-header text-bg-dark">
               <h1 className="modal-title fs-5" id="staticBackdropLabel">
                 Actualizar Tarea
               </h1>
@@ -116,7 +153,7 @@ const List = () => {
                 aria-label="Close"
               ></button>
             </div>
-            <div className="modal-body">
+            <div className="modal-body text-bg-dark">
               {tarea && (
                 <form onSubmit={updateTarea}>
                   <div className="form-floating">
@@ -188,12 +225,12 @@ const List = () => {
                   <button
                     className={
                       habilitar
-                        ? "form-control btn btn-primary"
+                        ? "form-control btn btn-warning"
                         : "form-control btn btn-secondary disabled"
                     }
                     disabled={!habilitar}
                   >
-                    {habilitar ? "Actualizar Tarea" : "Llena los campos"}
+                    {habilitar ? "Actualizar Tarea" : "No hay cambios"}
                   </button>
                 </form>
               )}
