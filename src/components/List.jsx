@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import credentials from "../credenciales";
+
 import {
   getFirestore,
   collection,
@@ -18,7 +19,7 @@ const List = () => {
   const [list, setList] = useState([]);
   const [tarea, setTarea] = useState(null);
   const [habilitar, setHabilitar] = useState(false);
-
+  
   // Obtener y renderizar la lista de tareas solo del usuario logueado
   const getList = async () => {
     try {
@@ -57,7 +58,7 @@ const List = () => {
   const deleteTarea = async (id) => {
     try {
       await deleteDoc(doc(db, "tareas", id));
-      alert("Tarea eliminada con éxito");
+      
       getList(); // Actualizar la lista tras eliminar una tarea
     } catch (error) {
       console.error("Error al eliminar la tarea:", error);
@@ -69,10 +70,14 @@ const List = () => {
     e.preventDefault();
     try {
       await updateDoc(doc(db, "tareas", tarea.id), tarea);
-      alert("Tarea actualizada con éxito");
       setTarea(null);
+// Suggested code may be subject to a license. Learn more: ~LicenseLog:456925387.
+      alert("Trarea actualizada con éxito.");
       setHabilitar(false);
-      getList(); // Actualizar la lista tras actualizar una tarea
+      
+      getList();
+      
+       // Actualizar la lista tras actualizar una tarea
     } catch (error) {
       console.error("Error al actualizar la tarea:", error);
       alert("No se pudo actualizar la tarea.");
@@ -111,7 +116,7 @@ const List = () => {
                 <p className="card-text">Dificultad: {tarea.dificultad}</p>
 <button
                     type="button"
-                    className="btn btn-info btn-sm"
+                    className="btn btn-primary btn-sm"
                     data-bs-toggle="modal"
                     data-bs-target="#staticBackdrop"
                     onClick={() => setTarea(tarea)} // Establece toda la tarea
@@ -119,10 +124,10 @@ const List = () => {
                     Editar
                   </button>
                 <button
-                  className="btn btn-danger mt-auto"
+                  className="btn btn-success mt-auto"
                   onClick={() => deleteTarea(tarea.id)}
                 >
-                  Eliminar
+                  Done
                 </button>
               </div>
             </div>

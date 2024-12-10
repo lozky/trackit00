@@ -37,7 +37,7 @@ const Form = ({ userId }) => {
       };
 
       await addDoc(collection(db, "tareas"), nuevaTarea);
-      alert("Tarea registrada con éxito");
+      
       setTarea(tareaInicial);
       setShowModal(false); // Cierra el modal después de guardar
     } catch (error) {
@@ -49,8 +49,8 @@ const Form = ({ userId }) => {
     <div>
       <header className='text-bg-dark'></header>
       {/* Botón para abrir el modal */}
-      <button className="btn btn-success" onClick={() => setShowModal(true)}>
-        Registrar Tarea
+      <button className="btn btn-danger" onClick={() => setShowModal(true)}>
+        Nueva tarea
       </button>
 
       {/* Modal */}
